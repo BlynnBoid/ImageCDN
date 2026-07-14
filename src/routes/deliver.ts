@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { eq, isNull } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { images } from '../db/schema'
 import { createStorage } from '../lib/storage'

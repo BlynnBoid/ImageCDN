@@ -3,6 +3,7 @@ import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 import { join } from 'node:path'
+import { sql } from './db/client'
 import { imageRoutes }  from './routes/images'
 import { albumRoutes }  from './routes/albums'
 import { userRoutes }   from './routes/users'
@@ -23,7 +24,7 @@ app.use('/api/*', cors({
 /* ── Local file serving (only active when using LocalStorage) ──────── */
 app.get('/files/*', async (c) => {
   const key      = c.req.path.replace(/^\/files\//, '')
-  const filePath = join('./uploads', key)
+  const filePath = join(process.env.UPLOAD_DIR ?? './uploads', key)
   const file     = Bun.file(filePath)
 
   if (!await file.exists()) return c.notFound()
@@ -47,6 +48,15 @@ app.route('/admin',      adminRoutes)
 /* ── Health check ───────────────────────────────────────────────────── */
 app.get('/health', (c) => c.json({ status: 'ok', ts: Date.now() }))
 
+app.get('/ready', async (c) => {
+  try {
+    await sql`select 1`
+    return c.json({ status: 'ready', ts: Date.now() })
+  } catch {
+    return c.json({ status: 'unavailable', ts: Date.now() }, 503)
+  }
+})
+
 /* ── Global error handler ───────────────────────────────────────────── */
 app.onError((err, c) => {
   console.error(err)
@@ -56,11 +66,17 @@ app.onError((err, c) => {
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
 
 /* ── Start ──────────────────────────────────────────────────────────── */
-const port = parseInt(process.env.PORT ?? '3000')
+const port = Number(process.env.PORT ?? '3000')
+const hostname = process.env.HOST ?? '0.0.0.0'
+
+if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+  throw new Error('PORT must be an integer between 1 and 65535')
+}
 
 export default {
   port,
+  hostname,
   fetch: app.fetch,
 }
 
-console.log(`🚀  ImageCDN running on http://localhost:${port}`)
+console.log(`ImageCDN listening on http://${hostname}:${port}`)

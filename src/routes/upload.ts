@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { eq, isNull } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../db/client'
 import { images, albums } from '../db/schema'

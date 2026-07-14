@@ -8,7 +8,7 @@ A fast, minimal image hosting API built with Bun + Hono. Focused purely on deliv
 - **Framework**: Hono
 - **Database**: PostgreSQL + Drizzle ORM
 - **Image processing**: `Bun.image` (native, zero-dep)
-- **Storage**: S3-compatible (optional) or local `./uploads/`
+- **Storage**: S3-compatible or configurable local storage
 
 ## Quick start
 
@@ -19,6 +19,9 @@ cp .env.example .env
 bun run db:migrate
 bun run dev
 ```
+
+For Flux Deploy with Git, Docker Compose, and direct VPS instructions, see
+[`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## API
 
@@ -69,13 +72,16 @@ Visit `/admin` — protected by `ADMIN_TOKEN` env var. Lets you create users, ge
 
 ## Environment
 
-See `.env.example` for all variables. S3 storage is enabled by setting all `S3_*` variables; leaving them unset falls back to `./uploads/`.
+See `.env.example` for all variables. Choose `STORAGE_PROVIDER=local` with a
+persistent `UPLOAD_DIR`, or `STORAGE_PROVIDER=s3` with all required S3 values.
 
 ## Commands
 
 ```bash
 bun run dev          # hot reload
 bun run start        # production
+bun run start:deploy # migrate, then start (deployments)
+bun run typecheck    # TypeScript validation
 bun run db:generate  # generate migration from schema changes
 bun run db:migrate   # apply migrations
 bun run db:studio    # Drizzle Studio (DB browser)

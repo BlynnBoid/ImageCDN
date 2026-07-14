@@ -26,7 +26,7 @@ export async function processImage(input: Buffer): Promise<ProcessedImage> {
 
   if (!meta.format) throw new Error('Unrecognized image format')
 
-  const mime = meta.format === 'jpg' ? 'image/jpeg' : `image/${meta.format}`
+  const mime = meta.format === 'jpeg' ? 'image/jpeg' : `image/${meta.format}`
   if (!ALLOWED_MIME.has(mime)) throw new Error(`Unsupported format: ${meta.format}`)
 
   // autoOrient is true by default — strips EXIF rotation tag
