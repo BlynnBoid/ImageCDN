@@ -11,8 +11,10 @@ export function setImageCacheHeaders(
   if (userId)  tags.push(`user-${userId}`)
   if (albumId) tags.push(`album-${albumId}`)
 
-  c.header('Cache-Control', 'public, max-age=31536000, immutable')
-  c.header('CDN-Cache-Control', 'max-age=31536000')
+  // Redirect targets can change after deletion or migration between regions.
+  // Keep edge caching useful without relying on Enterprise cache-tag purging.
+  c.header('Cache-Control', 'public, max-age=300')
+  c.header('CDN-Cache-Control', 'max-age=3600, stale-while-revalidate=300')
   c.header('ETag', `"${slug}-${variant}"`)
   c.header('Cache-Tag', tags.join(', '))
   c.header('Access-Control-Allow-Origin', '*')

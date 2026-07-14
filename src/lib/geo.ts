@@ -32,3 +32,15 @@ export function nearestRegion(cfCountry: string): Region {
   }
   return REGIONS.find(r => r.name === 'eu1') ?? REGIONS[0]!
 }
+
+export function regionOriginForHost(hostHeader: string | undefined): string | null {
+  const hostname = hostHeader?.split(',')[0]?.trim().split(':')[0]?.toLowerCase()
+  if (!hostname) return null
+
+  for (const region of REGIONS) {
+    const origin = new URL(region.upload_url).origin
+    if (new URL(origin).hostname.toLowerCase() === hostname) return origin
+  }
+
+  return null
+}

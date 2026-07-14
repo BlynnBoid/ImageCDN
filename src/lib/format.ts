@@ -28,6 +28,10 @@ export interface AlbumResponse {
 
 export function formatImage(img: Image, storage: StorageProvider): ImageResponse {
   const base = img.storage_key
+  const publicUrl = (key: string) => img.storage_origin && storage.urlFromOrigin
+    ? storage.urlFromOrigin(key, img.storage_origin)
+    : storage.publicUrl(key)
+
   return {
     encoded_id:        img.slug,
     mime:              img.mime_type,
@@ -35,9 +39,9 @@ export function formatImage(img: Image, storage: StorageProvider): ImageResponse
     width:             img.width,
     height:            img.height,
     original_filename: img.original_filename,
-    original_url:      storage.publicUrl(`${base}/original.${img.ext}`),
-    medium_url:        storage.publicUrl(`${base}/medium.webp`),
-    thumb_url:         storage.publicUrl(`${base}/thumb.webp`),
+    original_url:      publicUrl(`${base}/original.${img.ext}`),
+    medium_url:        publicUrl(`${base}/medium.webp`),
+    thumb_url:         publicUrl(`${base}/thumb.webp`),
     is_ai_generated:   img.is_ai_generated,
     created_at:        img.created_at.toISOString(),
     updated_at:        img.updated_at.toISOString(),

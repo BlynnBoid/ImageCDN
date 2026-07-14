@@ -1,0 +1,1 @@
+-- Snapshot synchronization only. storage_origin was added by migration 0001.

@@ -7,6 +7,7 @@ import { createStorage } from '../lib/storage'
 import { processImage } from '../lib/images'
 import { formatImage } from '../lib/format'
 import { imageSlug } from '../lib/nanoid'
+import { regionOriginForHost } from '../lib/geo'
 import { apiKeyAuth } from '../middleware/auth'
 import { noCache } from '../middleware/cache'
 import type { AuthVariables } from '../middleware/auth'
@@ -81,6 +82,8 @@ uploadRoutes.post('/', async (c) => {
   const slug       = imageSlug()
   const storageKey = `images/${slug}`
   const userId     = c.get('userId')
+  const requestHost = c.req.header('x-forwarded-host') ?? c.req.header('host')
+  const storageOrigin = regionOriginForHost(requestHost) ?? process.env.PUBLIC_URL ?? null
 
   // Store all three variants in parallel
   await Promise.all([
@@ -102,7 +105,7 @@ uploadRoutes.post('/', async (c) => {
       ext:               processed.ext,
       album_id:          resolvedAlbumId,
       user_id:           userId,
-      storage_origin:    process.env.PUBLIC_URL ?? null,
+      storage_origin:    storageOrigin,
     })
     .returning()
 
