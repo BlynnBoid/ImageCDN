@@ -139,3 +139,22 @@ curl -i -X POST "$BASE_URL/admin/users/1/keys" \
 # Revoke an API key (id is integer)
 curl -X DELETE "$BASE_URL/admin/keys/1" -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
+
+---
+
+## Multi-region (`/api/region`)
+
+The main gateway domain (`image.app.runonflux.io`) uses the Cloudflare `CF-IPCountry`
+header to tell clients which regional instance they should upload to.
+
+```bash
+# Get the nearest upload URL for the current client (no auth)
+curl "https://image.app.runonflux.io/api/region"
+# → {"region":"na1","upload_url":"https://na1.frogcdn.com/api/upload","country":"US","regions":[...]}
+
+# Typical client flow: resolve region first, then upload to that URL
+REGION=$(curl -s "https://image.app.runonflux.io/api/region" | bun -e "console.log(JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).upload_url)")
+curl -X POST "$REGION" \
+  -H "X-API-Key: $API_KEY" \
+  -F "file=@./photo.jpg"
+```

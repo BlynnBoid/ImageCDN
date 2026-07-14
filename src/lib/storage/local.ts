@@ -29,4 +29,8 @@ export class LocalStorage implements StorageProvider {
   publicUrl(key: string): string {
     return `${this.publicBaseUrl}/files/${key}`
   }
+
+  urlFromOrigin(key: string, origin: string): string {
+    return `${origin.replace(/\/$/, '')}/files/${key}`
+  }
 }

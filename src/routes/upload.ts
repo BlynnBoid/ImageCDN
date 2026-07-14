@@ -102,6 +102,7 @@ uploadRoutes.post('/', async (c) => {
       ext:               processed.ext,
       album_id:          resolvedAlbumId,
       user_id:           userId,
+      storage_origin:    process.env.PUBLIC_URL ?? null,
     })
     .returning()
 

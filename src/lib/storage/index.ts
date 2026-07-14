@@ -5,6 +5,9 @@ export interface StorageProvider {
   put(key: string, data: Buffer, mimeType: string): Promise<void>
   delete(key: string): Promise<void>
   publicUrl(key: string): string
+  // For multi-region local storage: build the file URL from a specific origin.
+  // S3 implementations do not need this — their publicUrl() is already absolute.
+  urlFromOrigin?(key: string, origin: string): string
 }
 
 export function createStorage(): StorageProvider {

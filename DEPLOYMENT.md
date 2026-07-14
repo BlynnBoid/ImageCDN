@@ -140,3 +140,59 @@ bun run start:deploy
 
 Commit generated files under `src/db/migrations/` whenever the schema changes.
 Never use `drizzle-kit push` as the production deployment mechanism.
+
+## Multi-region setup
+
+The three Flux instances (`na1`, `eu1`, `eu2`) share a single PostgreSQL database
+but each stores images locally. `PUBLIC_URL` on each instance is its own domain,
+and is recorded as `storage_origin` on every image at upload time. The delivery
+route (`/i/:slug/:variant`) reads `storage_origin` and redirects there, so a
+request hitting `eu1` for an image uploaded on `na1` still redirects the client
+correctly to `na1`.
+
+### Instance env vars
+
+Each Flux instance needs its own `PUBLIC_URL`:
+
+| Instance | `PUBLIC_URL` |
+| --- | --- |
+| na1 | `https://na1.frogcdn.com` |
+| eu1 | `https://eu1.frogcdn.com` |
+| eu2 | `https://eu2.frogcdn.com` |
+
+### Geo-routing endpoint
+
+`GET /api/region` on the main gateway domain (`image.app.runonflux.io`) reads
+the Cloudflare `CF-IPCountry` request header and returns the nearest regional
+upload URL. Americas traffic routes to `na1`; everything else routes to `eu1`.
+
+The gateway domain optionally overrides the regional URLs via env:
+
+```dotenv
+REGION_NA1_URL=https://na1.frogcdn.com
+REGION_EU1_URL=https://eu1.frogcdn.com
+REGION_EU2_URL=https://eu2.frogcdn.com
+```
+
+### Upload flow
+
+```
+client → GET https://image.app.runonflux.io/api/region
+       ← { "upload_url": "https://na1.frogcdn.com/api/upload" }
+
+client → POST https://na1.frogcdn.com/api/upload  (file lands on na1)
+       ← { "image": { "slug": "abc123", ... } }
+
+client → GET  https://eu1.frogcdn.com/i/abc123/thumb
+       ← 302  https://na1.frogcdn.com/files/images/abc123/thumb.webp
+```
+
+Any instance can answer metadata and delivery requests. Only the instance that
+holds the file needs to serve it.
+
+### Existing images (pre-migration)
+
+Images uploaded before this change have `storage_origin = NULL`. Delivery falls
+back to `storage.publicUrl()` — the current instance's `PUBLIC_URL`. If an image
+was uploaded on a now-different-domain instance, those old images will need to be
+re-uploaded or manually backfilled with the correct `storage_origin`.

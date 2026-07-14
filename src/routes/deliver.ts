@@ -33,5 +33,11 @@ deliverRoutes.get('/:slug/:variant', async (c) => {
     ? `${image.storage_key}/original.${image.ext}`
     : `${image.storage_key}/${variant}.webp`
 
-  return c.redirect(storage.publicUrl(key), 302)
+  // For local storage: redirect to the instance that holds this file.
+  // For S3: storage.publicUrl() is already an absolute S3 URL — origin doesn't apply.
+  const url = (image.storage_origin && storage.urlFromOrigin)
+    ? storage.urlFromOrigin(key, image.storage_origin)
+    : storage.publicUrl(key)
+
+  return c.redirect(url, 302)
 })

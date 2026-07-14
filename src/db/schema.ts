@@ -48,6 +48,7 @@ export const images = pgTable('images', {
   album_id:          integer('album_id').references(() => albums.id, { onDelete: 'set null' }),
   user_id:           integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   is_ai_generated:   boolean('is_ai_generated').default(false).notNull(),
+  storage_origin:    text('storage_origin'),
   deleted_at:        timestamp('deleted_at'),
   created_at:        timestamp('created_at').defaultNow().notNull(),
   updated_at:        timestamp('updated_at').defaultNow().notNull(),

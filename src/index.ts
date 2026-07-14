@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 import { join } from 'node:path'
 import { sql } from './db/client'
+import { nearestRegion, REGIONS } from './lib/geo'
 import { imageRoutes }  from './routes/images'
 import { albumRoutes }  from './routes/albums'
 import { userRoutes }   from './routes/users'
@@ -55,6 +56,13 @@ app.get('/ready', async (c) => {
   } catch {
     return c.json({ status: 'unavailable', ts: Date.now() }, 503)
   }
+})
+
+/* ── Geo region routing ─────────────────────────────────────────────── */
+app.get('/api/region', (c) => {
+  const country = c.req.header('CF-IPCountry') ?? c.req.header('cf-ipcountry') ?? ''
+  const region  = nearestRegion(country)
+  return c.json({ region: region.name, upload_url: region.upload_url, country: country || null, regions: REGIONS })
 })
 
 /* ── Global error handler ───────────────────────────────────────────── */
