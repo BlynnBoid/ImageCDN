@@ -3,13 +3,14 @@ services:
     build: .
     restart: unless-stopped
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
     environment:
       HOST: 0.0.0.0
       PORT: 3000
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-imagecdn}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-imagecdn}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-imagecdn}:${POSTGRES_PASSWORD:-change-me}@pgbouncer:6432/${POSTGRES_DB:-imagecdn}
+      DB_POOL_MAX: ${DB_POOL_MAX:-20}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?ADMIN_TOKEN is required}
       MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-25}
       STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
@@ -29,6 +30,29 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+
+  pgbouncer:
+    image: edoburu/pgbouncer:1.23.1
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-imagecdn}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      DB_NAME: ${POSTGRES_DB:-imagecdn}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: ${PGBOUNCER_POOL_SIZE:-4}
+      SERVER_IDLE_TIMEOUT: 600
+      AUTH_TYPE: scram-sha-256
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432 -U ${POSTGRES_USER:-imagecdn}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   postgres:
     image: postgres:17-alpine

@@ -141,6 +141,54 @@ bun run start:deploy
 Commit generated files under `src/db/migrations/` whenever the schema changes.
 Never use `drizzle-kit push` as the production deployment mechanism.
 
+## PgBouncer connection pooling
+
+The app connects with `prepare: false` (required for PgBouncer transaction
+pooling mode). Point `DATABASE_URL` at PgBouncer instead of PostgreSQL directly.
+
+With a 5-connection PostgreSQL limit across 3 Flux instances, the math without
+a pooler is impossible: 3 instances × `DB_POOL_MAX=10` = 30 attempted
+connections. With PgBouncer:
+
+```
+Flux instances (3 × DB_POOL_MAX=20 = 60 app connections)
+       ↓
+  PgBouncer  (DEFAULT_POOL_SIZE=4 server connections)
+       ↓
+  PostgreSQL (5 connection limit, 1 reserved for admin/migrations)
+```
+
+### Flux deployment
+
+Deploy PgBouncer as a separate Flux application in transaction pooling mode.
+Set these env vars:
+
+```dotenv
+DB_HOST=<postgres-flux-hostname>
+DB_PORT=5432
+DB_USER=<user>
+DB_PASSWORD=<password>
+DB_NAME=imagecdn
+POOL_MODE=transaction
+MAX_CLIENT_CONN=100
+DEFAULT_POOL_SIZE=4
+AUTH_TYPE=scram-sha-256
+```
+
+Then set each ImageCDN instance's `DATABASE_URL` to the PgBouncer host/port
+(default PgBouncer port is `6432`) and raise `DB_POOL_MAX` to `20`:
+
+```dotenv
+DATABASE_URL=postgresql://user:password@pgbouncer-host:6432/imagecdn
+DB_POOL_MAX=20
+```
+
+### Docker Compose (local/VPS)
+
+The included `compose.yaml` adds PgBouncer automatically. The app connects to
+`pgbouncer:6432`; PgBouncer holds at most `PGBOUNCER_POOL_SIZE` (default `4`)
+server connections to PostgreSQL. No extra configuration is needed.
+
 ## Multi-region setup
 
 The three Flux instances (`na1`, `eu1`, `eu2`) share a single PostgreSQL database
