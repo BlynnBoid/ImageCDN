@@ -33,6 +33,7 @@ app.get('/files/*', async (c) => {
   c.header('Cache-Control', 'public, max-age=31536000, immutable')
   c.header('CDN-Cache-Control', 'max-age=31536000')
   c.header('Access-Control-Allow-Origin', '*')
+  c.header('Cross-Origin-Resource-Policy', 'cross-origin')
   c.header('Timing-Allow-Origin', '*')
 
   return new Response(file)

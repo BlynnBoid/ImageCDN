@@ -6,3 +6,7 @@ dist/
 *.sqlite
 .DS_Store
 Thumbs.db
+
+# Kilo config may contain MCP tokens/secrets
+.kilo/kilo.json
+.kilo/kilo.jsonc
