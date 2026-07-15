@@ -42,7 +42,9 @@ app.get('/files/*', async (c) => {
   c.header('Cross-Origin-Resource-Policy', 'cross-origin')
   c.header('Timing-Allow-Origin', '*')
 
-  return new Response(file)
+  // Return through Hono so c.header() values are preserved. Streaming avoids
+  // buffering the entire image in memory.
+  return c.body(file.stream())
 })
 
 /* ── Routes ───────────────────────────────────────────────────────── */
