@@ -29,7 +29,7 @@ app.use('/api/*', cors({
 /* ── Local file serving ───────────────────────────────────────────── */
 app.get('/files/*', async (c) => {
   const key = c.req.path.replace(/^\/files\//, '')
-  const filePath = join(process.env.UPLOAD_DIR ?? './uploads', key)
+  const filePath = join(process.env.UPLOAD_DIR ?? '../../shared/uploads', key)
   const file = Bun.file(filePath)
 
   if (!await file.exists()) {
