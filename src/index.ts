@@ -36,14 +36,14 @@ app.get('/files/*', async (c) => {
     return c.notFound()
   }
 
+  c.header('Content-Type', file.type || 'application/octet-stream')
+  c.header('Content-Length', String(file.size))
   c.header('Cache-Control', 'public, max-age=31536000, immutable')
   c.header('CDN-Cache-Control', 'max-age=31536000')
   c.header('Access-Control-Allow-Origin', '*')
   c.header('Cross-Origin-Resource-Policy', 'cross-origin')
   c.header('Timing-Allow-Origin', '*')
 
-  // Return through Hono so c.header() values are preserved. Streaming avoids
-  // buffering the entire image in memory.
   return c.body(file.stream())
 })
 
