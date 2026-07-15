@@ -37,7 +37,7 @@ export function createStorage(): StorageProvider {
   }
 
   return new LocalStorage({
-    root:          process.env.UPLOAD_DIR ?? './uploads',
+    root:          process.env.UPLOAD_DIR ?? '../../shared/uploads',
     publicBaseUrl: process.env.PUBLIC_URL ?? 'http://localhost:3000',
   })
 }
